@@ -2,6 +2,8 @@ import "@tensorflow/tfjs-node";
 import * as tf from "@tensorflow/tfjs";
 import dsManager from "./ds.manager";
 import DsManager from "./ds.manager";
+import fs from "fs";
+
 
 tf.setBackend("tensorflow");
 
@@ -9,9 +11,11 @@ tf.setBackend("tensorflow");
 const readImages = (): DsManager => {
     const dsManager = new DsManager(2);
 
+
     const img = tf.tidy(() => {
         // Reads the image as a Tensor from the webcam <video> element.
-        const webcamImage = tf.fromPixels(this.webcamElement);
+        const image = fs.readFileSync("");
+        const webcamImage = tf.fromPixels(image);
 
         // Crop the image so we're using the center square of the rectangular
         // webcam.
@@ -72,7 +76,22 @@ const train = async (model: tf.Sequential, dsManager: dsManager ) => {
     const trainHistory = await model.fit(dsManager.xs, dsManager.ys, { epochs: 20 });
 };
 
+const prediction = async (model: tf.Sequential, input: tf.Tensor) => {
+    const result = await model.predict(input);
+    console.log(`${result}`);
+    return result;
+};
 
+const saveModel = async (model: tf.Sequential) => {
+    const saveResult = await model.save("./model/model1.json");
+    console.log(saveResult);
+};
+
+const loadModel = async (path: string): Promise<tf.Model> => {
+    const saveResult = await tf.loadModel(path);
+    console.log(saveResult);
+    return saveResult;
+};
 
 train(buildModel(), readImages());
 
