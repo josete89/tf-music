@@ -1,0 +1,29 @@
+{
+  "name": "tfjs-music",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run build && npm run serve",
+    "build": "tsc",
+    "debug": "npm run build && npm run serve-debug",
+    "watch-ts": "tsc -w",
+    "test": "jest",
+    "tslint": "tslint -c tslint.json 'src/**/*.ts'",
+    "watch": "nodemon dist/main.js",
+    "serve": "node ./dist/main.js",
+    "serve-debug": "nodemon --inspect dist/main.js",
+    "watch-debug": "concurrently -k -p \"[{name}]\" -n \"TypeScript,Node\" -c \"cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@tensorflow/tfjs": "^0.11.6",
+    "@tensorflow/tfjs-node": "^0.1.7"
+  },
+  "devDependencies": {
+    "nodemon": "^1.17.5",
+    "tslint": "^5.10.0",
+    "typescript": "^2.9.1"
+  }
+}
