@@ -9,13 +9,14 @@ tf.setBackend("tensorflow");
 
 
 const readImages = (): DsManager => {
-    const dsManager = new DsManager(2);
+    const dsManager = new DsManager(3);
 
 
     const img = tf.tidy(() => {
         // Reads the image as a Tensor from the webcam <video> element.
         const image = fs.readFileSync("");
-        const webcamImage = tf.fromPixels(image);
+        const s = new Uint8ClampedArray();
+        const webcamImage = tf.fromPixels({ data: s, height: 128, width: 128});
 
         // Crop the image so we're using the center square of the rectangular
         // webcam.
@@ -66,13 +67,13 @@ const buildModel = (): tf.Sequential => {
     model.add(tf.layers.flatten());
     model.add(tf.layers.dense({ units: 128, activation: "relu" }));
     model.add(tf.layers.dropout({ rate: 0.5 }));
-    model.add(tf.layers.dense({ units: 2, activation: "sigmoid" }));
+    model.add(tf.layers.dense({ units: 2, activation: "softmax" }));
 
     return model;
 };
 
 const train = async (model: tf.Sequential, dsManager: dsManager ) => {
-    model.compile( { optimizer: "rmsprop" , loss: "categoricalCrossentropy", metrics: ["accuracy"] } );
+    model.compile( { optimizer: "rmsprop" , loss: "categoricalCrossentropy", metrics: ["accuracy","val_acc"] } );
     const trainHistory = await model.fit(dsManager.xs, dsManager.ys, { epochs: 20 });
 };
 
