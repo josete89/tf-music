@@ -4,7 +4,7 @@ import dsManager from "./ds.manager";
 import DsManager from "./ds.manager";
 import fs, { read } from "fs";
 import { buffer } from "@tensorflow/tfjs";
-const jpeg = require('jpeg-js');
+const jpeg = require("jpeg-js");
 
 tf.setBackend("tensorflow");
 
