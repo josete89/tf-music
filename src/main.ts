@@ -2,8 +2,9 @@ import "@tensorflow/tfjs-node";
 import * as tf from "@tensorflow/tfjs";
 import dsManager from "./ds.manager";
 import DsManager from "./ds.manager";
-import fs from "fs";
-
+import fs, { read } from "fs";
+import { buffer } from "@tensorflow/tfjs";
+const jpeg = require('jpeg-js');
 
 tf.setBackend("tensorflow");
 
@@ -11,26 +12,35 @@ tf.setBackend("tensorflow");
 const readImages = (): DsManager => {
     const dsManager = new DsManager(3);
 
+    const directoryInfo = [{path: "/Users/alcaljos/test-data/stan smith", label: 0},
+                           {path: "/Users/alcaljos/test-data/nmd", label: 1},
+                           {path: "/Users/alcaljos/test-data/superstar", label: 2}];
 
-    const img = tf.tidy(() => {
-        // Reads the image as a Tensor from the webcam <video> element.
-        const image = fs.readFileSync("");
-        const s = new Uint8ClampedArray();
-        const webcamImage = tf.fromPixels({ data: s, height: 128, width: 128});
+    const files = (path: string): Buffer[] => {
+        return fs.readdirSync(directoryInfo[0].path).map((file) => {
+            if (file == ".DS_Store") { return; }
+            console.log(file);
+            const path = directoryInfo[0].path;
+            const data =  fs.readFileSync(`${path}/${file}`);
+            const rawImageData = jpeg.decode(data, true);
+            return rawImageData.data;
+        });
+    };
 
-        // Crop the image so we're using the center square of the rectangular
-        // webcam.
-        const croppedImage = this.cropImage(webcamImage);
+    const convertImgToTensor = (label: number) => (data: Buffer) => {
+        const tensor = tf.tidy( () => {
+            const t = tf.tensor3d(data, [128, 128, 4], "int32");
+            const batchedImage = t.expandDims(0);
+            batchedImage.toFloat().div(tf.scalar(127)).sub(tf.scalar(1));
+            return batchedImage;
+        });
+        dsManager.addExample(tensor, 0);
+    };
 
-        // Expand the outer most dimension so we have a batch size of 1.
-        const batchedImage = croppedImage.expandDims(0);
-
-        // Normalize the image between -1 and 1. The image comes in between 0-255,
-        // so we divide by 127 and subtract 1.
-        return batchedImage.toFloat().div(tf.scalar(127)).sub(tf.scalar(1));
+    directoryInfo.forEach( (info) => {
+        const transform = convertImgToTensor(info.label);
+        files(info.path).forEach(transform);
     });
-
-    dsManager.addExample(img, 0);
 
     return dsManager;
 
@@ -73,7 +83,7 @@ const buildModel = (): tf.Sequential => {
 };
 
 const train = async (model: tf.Sequential, dsManager: dsManager ) => {
-    model.compile( { optimizer: "rmsprop" , loss: "categoricalCrossentropy", metrics: ["accuracy","val_acc"] } );
+    model.compile( { optimizer: "rmsprop" , loss: "categoricalCrossentropy", metrics: ["accuracy", "val_acc"] } );
     const trainHistory = await model.fit(dsManager.xs, dsManager.ys, { epochs: 20 });
 };
 
@@ -95,7 +105,6 @@ const loadModel = async (path: string): Promise<tf.Model> => {
 };
 
 train(buildModel(), readImages());
-
 
 
 

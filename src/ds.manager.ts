@@ -20,12 +20,12 @@ class DsManager {
       // One-hot encode the label.
       let y = undefined ;
       if (this.numClasses > 2) {
-        y = tf.tidy(() => tf.oneHot(tf.tensor1d([label]), this.numClasses));
+        y = tf.tidy(() => tf.oneHot(tf.tensor1d([label], "int32"), this.numClasses));
       } else {
         y = tf.tensor1d([label]) ;
       }
 
-      if (this.xs) {
+      if (!this.xs) {
         // For the first example that gets added, keep example and y so that the
         // ControllerDataset owns the memory of the inputs. This makes sure that
         // if addExample() is called in a tf.tidy(), these Tensors will not get
